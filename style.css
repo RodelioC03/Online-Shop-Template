@@ -161,3 +161,30 @@ footer { text-align: center; padding: 28px; color: var(--muted); border-top: 1px
   .section-head { flex-direction: column; align-items: flex-start; }
 }
 .checkout-note, .empty-message { color: var(--muted); line-height: 1.6; }
+#shop {
+  display: block !important;
+}
+
+#productGrid {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  min-height: 300px;
+  margin-top: 20px;
+}
+
+.product-card {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: white;
+  color: #251416;
+  min-height: 420px;
+}
+
+.product-card img {
+  display: block !important;
+  width: 100%;
+  height: 290px;
+  object-fit: cover;
+}
