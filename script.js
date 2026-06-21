@@ -4,6 +4,8 @@ import {
   collection,
   addDoc,
   getDocs,
+  doc,
+  runTransaction,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
@@ -32,56 +34,41 @@ function peso(value) {
   return `₱${Number(value || 0).toLocaleString()}`;
 }
 
+function makeOrderNumber() {
+  return "RN-" + Date.now();
+}
+
 async function loadProducts() {
-  try {
-    const snapshot = await getDocs(collection(db, "products"));
-    products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const snapshot = await getDocs(collection(db, "products"));
+  products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    if (products.length === 0) {
-      productGrid.innerHTML = `<p class="empty-message">No dresses yet. Add products directly in Firebase Firestore under the <strong>products</strong> collection.</p>`;
-      return;
-    }
-
-    renderProducts();
-  } catch (error) {
-    productGrid.innerHTML = `<p class="empty-message">Unable to load dresses. Please check your Firebase rules and internet connection.</p>`;
-    console.error(error);
+  if (products.length === 0) {
+    productGrid.innerHTML = `<p class="empty-message">No dresses yet. Add products in Firestore.</p>`;
+    return;
   }
+
+  renderProducts();
 }
 
 function renderProducts() {
   const search = searchInput.value.toLowerCase();
+
   const filtered = products.filter(product =>
     (product.name || "").toLowerCase().includes(search) ||
     (product.category || "").toLowerCase().includes(search)
   );
 
-  if (filtered.length === 0) {
-    productGrid.innerHTML = `<p class="empty-message">No dresses matched your search.</p>`;
-    return;
-  }
-
   productGrid.innerHTML = filtered.map(product => {
     const stock = Number(product.stock || 0);
-    let stockClass = "";
-    let stockText = `${stock} in stock`;
-
-    if (stock === 0) {
-      stockClass = "out";
-      stockText = "Out of stock";
-    } else if (stock <= 3) {
-      stockClass = "low";
-      stockText = `Only ${stock} left`;
-    }
 
     return `
       <article class="product-card">
-        <img src="${product.image}" alt="${product.name}" onerror="this.src='https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80'">
+        <img src="${product.image}" alt="${product.name}">
         <div class="product-info">
           <h3>${product.name}</h3>
           <p>${product.description || "Elegant dress from Roselyne's Nook."}</p>
           <div class="price">${peso(product.price)}</div>
-          <div class="stock ${stockClass}">${stockText}</div>
+          <div class="stock">${stock > 0 ? stock + " in stock" : "Out of stock"}</div>
           <button class="main-btn" ${stock === 0 ? "disabled" : ""} data-add="${product.id}">
             ${stock === 0 ? "Unavailable" : "Add to Cart"}
           </button>
@@ -93,23 +80,25 @@ function renderProducts() {
 
 function addToCart(productId) {
   const product = products.find(item => item.id === productId);
-  if (!product || Number(product.stock || 0) <= 0) return;
+  if (!product || Number(product.stock) <= 0) return;
 
   const existing = cart.find(item => item.id === productId);
+
   if (existing) {
-    if (existing.quantity < Number(product.stock || 0)) {
+    if (existing.quantity < Number(product.stock)) {
       existing.quantity++;
     } else {
-      alert("That is the maximum available stock for this dress.");
+      alert("Maximum stock reached.");
     }
   } else {
     cart.push({
       id: product.id,
       name: product.name,
-      price: Number(product.price || 0),
+      price: Number(product.price),
       quantity: 1
     });
   }
+
   renderCart();
 }
 
@@ -143,7 +132,7 @@ async function placeOrder(event) {
   event.preventDefault();
 
   if (cart.length === 0) {
-    alert("Please add a dress to your cart first.");
+    alert("Please add a dress first.");
     return;
   }
 
@@ -152,28 +141,57 @@ async function placeOrder(event) {
   const customerPhone = document.getElementById("customerPhone").value.trim();
   const customerAddress = document.getElementById("customerAddress").value.trim();
   const paymentMethod = document.getElementById("paymentMethod").value;
+  const paymentReference = document.getElementById("paymentReference").value.trim();
+
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const orderNumber = makeOrderNumber();
 
   try {
+    await runTransaction(db, async (transaction) => {
+      for (const item of cart) {
+        const productRef = doc(db, "products", item.id);
+        const productDoc = await transaction.get(productRef);
+
+        if (!productDoc.exists()) {
+          throw new Error(`${item.name} no longer exists.`);
+        }
+
+        const currentStock = Number(productDoc.data().stock || 0);
+
+        if (currentStock < item.quantity) {
+          throw new Error(`${item.name} does not have enough stock.`);
+        }
+
+        transaction.update(productRef, {
+          stock: currentStock - item.quantity
+        });
+      }
+    });
+
     await addDoc(collection(db, "orders"), {
+      orderNumber,
       customerName,
       customerEmail,
       customerPhone,
       customerAddress,
       paymentMethod,
+      paymentReference,
       items: cart,
       total,
-      status: "Pending",
+      status: "Pending Verification",
       paid: false,
       createdAt: serverTimestamp()
     });
 
-    alert("Order placed successfully! Roselyne's Nook received your order.");
+    alert(`Order placed successfully! Your order number is ${orderNumber}`);
+
     cart = [];
     renderCart();
     event.target.reset();
+    await loadProducts();
+
   } catch (error) {
-    alert("Order failed. Please check your Firebase rules.");
+    alert(error.message || "Order failed.");
     console.error(error);
   }
 }
@@ -208,4 +226,3 @@ document.getElementById("orderForm").addEventListener("submit", placeOrder);
 
 loadProducts();
 renderCart();
-console.log("Roselyne's Nook customer site connected to Firebase.");
