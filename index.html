@@ -1,31 +1,100 @@
-<form id="orderForm">
-  <label>Full Name
-    <input required id="customerName" type="text" placeholder="Your name" />
-  </label>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roselyne's Nook</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">RN</div>
+      <div>
+        <h1>Roselyne's Nook</h1>
+        <p>Minimal dresses for everyday elegance</p>
+      </div>
+    </div>
+    <nav>
+      <a href="#shop">Shop</a>
+      <a href="#cart">Cart</a>
+      <a href="#about">About</a>
+    </nav>
+  </header>
 
-  <label>Email
-    <input required id="customerEmail" type="email" placeholder="you@email.com" />
-  </label>
+  <main>
+    <section class="hero">
+      <div class="hero-text">
+        <span class="tag">Red & White Collection</span>
+        <h2>Simple dresses, clean style, easy ordering.</h2>
+        <p>Browse available dresses, check stock, and send your order directly to Roselyne's Nook.</p>
+        <a href="#shop" class="main-btn">Shop Dresses</a>
+      </div>
+      <div class="hero-card">
+        <div class="owner-photo"></div>
+        <h3>Roselyne's Nook</h3>
+        <p>A clean red-and-white boutique made for comfortable and elegant dress shopping.</p>
+      </div>
+    </section>
 
-  <label>Phone Number
-    <input required id="customerPhone" type="text" placeholder="09xxxxxxxxx" />
-  </label>
+    <section id="shop" class="section">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Catalog</p>
+          <h2>Available Dresses</h2>
+        </div>
+        <input type="search" id="searchInput" placeholder="Search dresses..." />
+      </div>
+      <div id="productGrid" class="product-grid"></div>
+    </section>
 
-  <label>Address
-    <textarea required id="customerAddress" placeholder="Delivery address"></textarea>
-  </label>
+    <section id="cart" class="section two-column">
+      <div class="panel">
+        <h2>Your Cart</h2>
+        <div id="cartItems" class="cart-items"></div>
+        <div class="total-row">
+          <span>Total</span>
+          <strong id="cartTotal">₱0</strong>
+        </div>
+      </div>
 
-  <label>Payment Method
-    <select id="paymentMethod">
-      <option>Cash on Delivery</option>
-      <option>GCash</option>
-      <option>Maya</option>
-    </select>
-  </label>
+      <div class="panel">
+        <h2>Checkout</h2>
+        <form id="orderForm">
+          <label>Full Name<input required id="customerName" type="text" placeholder="Your name" /></label>
+          <label>Email<input required id="customerEmail" type="email" placeholder="you@email.com" /></label>
+          <label>Phone Number<input required id="customerPhone" type="text" placeholder="09xxxxxxxxx" /></label>
+          <label>Address<textarea required id="customerAddress" placeholder="Delivery address"></textarea></label>
+          <label>Payment Method
+            <select id="paymentMethod">
+              <option>Cash on Delivery</option>
+              <option>GCash</option>
+              <option>Maya</option>
+            </select>
+          </label>
+          <button class="main-btn full" type="submit">Place Order</button>
+        </form>
+        <p class="checkout-note">Your order will be saved securely in Roselyne's Nook Firebase orders database.</p>
+      </div>
+    </section>
 
-  <label>Payment Reference Number
-    <input id="paymentReference" type="text" placeholder="GCash/Maya reference number or COD" />
-  </label>
+    <section id="about" class="section about">
+      <div>
+        <p class="eyebrow">About the Owner</p>
+        <h2>Meet Roselyne Cua</h2>
+        <p>Roselyne is a boutique owner who believes that fashion should feel elegant, comfortable, and easy to order. This is sample owner information and can be replaced anytime.</p>
+      </div>
+      <div class="about-box">
+        <h3>Brand Story</h3>
+        <p>Roselyne's Nook focuses on minimalist dresses with a red and white identity. Products and orders are managed in Firebase Firestore, not on the public website.</p>
+      </div>
+    </section>
+  </main>
 
-  <button class="main-btn full" type="submit">Place Order</button>
-</form>
+  <footer>
+    <p>© 2026 Roselyne's Nook. All rights reserved.</p>
+  </footer>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
